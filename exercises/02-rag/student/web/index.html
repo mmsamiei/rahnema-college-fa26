@@ -1,0 +1,58 @@
+<!doctype html>
+<html lang="fa" dir="rtl">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>تمرین ۲ — نسخهٔ شرکت‌کننده</title>
+<style>
+:root { font-family: system-ui,-apple-system,sans-serif; color:#182230; background:#f6f7fb; }
+* { box-sizing:border-box; } body { margin:0; } main { width:min(1120px,calc(100% - 32px)); margin:36px auto 64px; }
+.eyebrow { color:#5850a3;font-weight:700; } h1 { font-size:clamp(25px,4vw,36px); margin:9px 0; } .sub { color:#566073;line-height:1.9;margin:0 0 20px; }
+.card { background:#fff;border:1px solid #e4e7ec;border-radius:18px;padding:20px;box-shadow:0 8px 30px #3440540b;margin-top:16px; }
+h2 { font-size:17px;margin:0 0 12px; } .examples,.modes { display:flex;flex-wrap:wrap;gap:8px; }
+button { font:inherit;cursor:pointer; } .example,.mode { background:#f3f0ff;border:1px solid #ded6ff;color:#423291;border-radius:999px;padding:8px 12px;text-align:right; }
+.mode.selected { background:#5b3db5;color:#fff;border-color:#5b3db5; } .mode small { display:block;color:inherit;opacity:.82;font-size:11px; }
+textarea { width:100%;min-height:95px;resize:vertical;border:1px solid #c9cdd7;border-radius:11px;padding:12px;font:inherit;line-height:1.8;margin-top:8px; }
+textarea:focus { outline:2px solid #8d75dc;border-color:transparent; } .row { display:flex;justify-content:space-between;align-items:center;gap:14px;margin-top:10px; }
+.hint,.status { color:#667085;font-size:13px;line-height:1.7; } .primary { border:0;border-radius:10px;background:#5b3db5;color:#fff;padding:10px 18px;font-weight:700; }
+.reset { border:1px solid #d0d5dd;background:#fff;border-radius:9px;padding:7px 11px; } button:disabled { opacity:.55;cursor:wait; }
+.grid { display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px; } .retrieval { border:1px solid #e4e7ec;border-radius:12px;padding:12px;background:#fcfcfd; }
+.retrieval.chosen { border:2px solid #7658d3;background:#faf8ff; } .meta { color:#667085;font-size:12px;margin:0 0 8px; } .chunk { border-top:1px solid #eaecf0;padding-top:8px;margin-top:8px;white-space:pre-wrap;line-height:1.7;font-size:13px;max-height:170px;overflow:auto; }
+.chat-head { display:flex;justify-content:space-between;align-items:center;gap:12px; } .chat { display:flex;flex-direction:column;gap:12px;min-height:80px;max-height:450px;overflow:auto;padding:4px 2px 14px; }
+.bubble { max-width:90%;white-space:pre-wrap;line-height:1.9;border-radius:14px;padding:10px 14px; } .bubble strong { display:block;font-size:12px;margin-bottom:2px; }.user {align-self:flex-start;background:#f3f0ff}.assistant{align-self:flex-end;background:#f1f4f9}.sources{font-size:12px;color:#5b3db5;margin-top:6px}.error{color:#b42318}
+@media(max-width:820px){.grid{grid-template-columns:1fr}.row{align-items:flex-start;flex-direction:column}.card{padding:16px}}
+</style>
+</head>
+<body><main>
+<div class="eyebrow">رهنما کالج · تمرین ۲ · نسخهٔ شرکت‌کننده</div>
+<h1>قانون درست را پیدا کن، بعد پاسخ بده</h1>
+<p class="sub">اول بازیابی را برای سه نوع قطعه‌بندی مقایسه کنید. سپس یک حالت را انتخاب کنید تا فقط قطعه‌های همان حالت به LLM برسند.</p>
+<section class="card"><h2>سؤال‌های آزمایشی</h2><div id="examples" class="examples"></div></section>
+<section class="card"><h2>نوع قطعه‌بندی برای پاسخ</h2><div id="modes" class="modes">
+<button class="mode selected" data-mode="full" type="button">سند کامل<small>یک قطعه برای هر سند</small></button>
+<button class="mode" data-mode="window" type="button">برش خودکار<small>۳۵۰ نویسه + ۷۰ overlap</small></button>
+<button class="mode" data-mode="manual" type="button">مرز دستی<small>علامت &lt;!-- chunk --&gt;</small></button>
+</div>
+<form id="form"><label for="question">سؤال کاربر</label><textarea id="question" maxlength="2000" placeholder="یک سؤال دربارهٔ سیاست‌های رهنما بنویسید..." required></textarea>
+<div class="row"><span class="hint">«مقایسه» فقط retrieval را اجرا می‌کند و هزینهٔ LLM ندارد.</span><span><button class="reset" id="compare" type="button">مقایسهٔ بازیابی</button> <button class="primary" id="submit" type="submit">پاسخ با حالت انتخاب‌شده</button></span></div>
+<p class="status" id="status" role="status"></p></form></section>
+<section class="card"><h2>پیش‌نمایش retrieval</h2><div id="results" class="grid"><p class="hint">یک سؤال وارد کنید و «مقایسهٔ بازیابی» را بزنید.</p></div></section>
+<section class="card"><div class="chat-head"><h2>گفت‌وگو</h2><button class="reset" id="reset" type="button">گفت‌وگوی تازه</button></div><div id="chat" class="chat"></div></section>
+</main>
+<script>
+const modes=["full","window","manual"], labels={full:"سند کامل",window:"برش خودکار",manual:"مرز دستی"};
+const form=document.getElementById("form"), input=document.getElementById("question"), results=document.getElementById("results"), chat=document.getElementById("chat"), status=document.getElementById("status"), submit=document.getElementById("submit"), compare=document.getElementById("compare"), reset=document.getElementById("reset");
+const storageKey="rahnema-rag-conversation", modeKey="rahnema-rag-mode"; let history=[], chosen=sessionStorage.getItem(modeKey)||"full", previews={};
+try { const saved=JSON.parse(sessionStorage.getItem(storageKey)||"[]"); if(Array.isArray(saved)) history=saved; } catch {}
+function setMode(mode){ chosen=mode; sessionStorage.setItem(modeKey,mode); document.querySelectorAll(".mode").forEach(button=>button.classList.toggle("selected",button.dataset.mode===mode)); renderResults(); }
+document.querySelectorAll(".mode").forEach(button=>button.addEventListener("click",()=>setMode(button.dataset.mode)));
+function makeBubble(role, content, sources=[]){ if(chat.firstElementChild?.classList.contains("hint"))chat.replaceChildren(); const box=document.createElement("div");box.className="bubble "+role;const label=document.createElement("strong");label.textContent=role==="user"?"شما":"دستیار";const text=document.createElement("span");text.textContent=content;box.append(label,text);if(sources.length){const source=document.createElement("div");source.className="sources";source.textContent="منابع ارسال‌شده: "+sources.join("، ");box.append(source)}chat.append(box);chat.scrollTop=chat.scrollHeight; }
+function renderChat(){chat.replaceChildren();if(!history.length){const empty=document.createElement("p");empty.className="hint";empty.textContent="هنوز پیامی در این گفت‌وگو نیست.";chat.append(empty)} for(const item of history)makeBubble(item.role,item.content,item.sources||[])}
+function chunkView(chunk){const block=document.createElement("div");block.className="chunk";const title=document.createElement("strong");title.textContent="["+chunk.id+"] · امتیاز "+chunk.score;const text=document.createElement("div");text.textContent=chunk.text;block.append(title,text);return block}
+function renderResults(){results.replaceChildren();if(!Object.keys(previews).length){results.innerHTML='<p class="hint">یک سؤال وارد کنید و «مقایسهٔ بازیابی» را بزنید.</p>';return} for(const mode of modes){const data=previews[mode],card=document.createElement("article");card.className="retrieval"+(mode===chosen?" chosen":"");const title=document.createElement("h3");title.textContent=labels[mode];const meta=document.createElement("p");meta.className="meta";meta.textContent=data.chunks.length ? data.chunks.length+" قطعه · "+data.context_characters+" نویسه context" : "قطعهٔ مرتبطی پیدا نشد";card.append(title,meta);for(const chunk of data.chunks)card.append(chunkView(chunk));results.append(card)}}
+async function preview(){const question=input.value.trim();if(!question){status.className="status error";status.textContent="ابتدا یک سؤال وارد کنید.";return}compare.disabled=true;submit.disabled=true;status.className="status";status.textContent="در حال مقایسهٔ بازیابی...";try{const rows=await Promise.all(modes.map(async mode=>{const response=await fetch("/api/retrieve",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({question,mode})});const data=await response.json();if(!response.ok)throw new Error(data.error||"خطای بازیابی");return [mode,data]}));previews=Object.fromEntries(rows);renderResults();status.textContent="سه حالت بازیابی بدون تماس با مدل مقایسه شدند."}catch(error){status.className="status error";status.textContent=error.message}finally{compare.disabled=false;submit.disabled=false}}
+compare.addEventListener("click",preview);
+reset.addEventListener("click",()=>{history=[];sessionStorage.removeItem(storageKey);chat.replaceChildren();renderChat();status.textContent="";input.focus()});
+fetch("/api/questions").then(r=>r.json()).then(data=>{for(const question of data.questions){const button=document.createElement("button");button.type="button";button.className="example";button.textContent=question;button.addEventListener("click",()=>{input.value=question;input.focus()});document.getElementById("examples").append(button)}})
+form.addEventListener("submit",async event=>{event.preventDefault();const question=input.value.trim();if(!question||submit.disabled)return;if(history.length>=20){status.className="status error";status.textContent="۱۰ نوبت کامل شد؛ گفت‌وگوی تازه را شروع کنید.";return}submit.disabled=true;compare.disabled=true;reset.disabled=true;status.className="status";status.textContent="در حال بازیابی و دریافت پاسخ...";renderChat();makeBubble("user",question);makeBubble("assistant","در حال دریافت پاسخ...");try{const response=await fetch("/api/ask",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({question,history:history.map(({role,content})=>({role,content})),mode:chosen})});const data=await response.json();if(!response.ok)throw new Error(data.error||"خطای ناشناخته");const sources=data.chunks.map(item=>item.id);history.push({role:"user",content:question},{role:"assistant",content:data.answer,sources});sessionStorage.setItem(storageKey,JSON.stringify(history));previews[chosen]={chunks:data.chunks,context_characters:data.context_characters};input.value="";renderChat();renderResults();status.className=data.citation_ok?"status":"status error";status.textContent=data.citation_ok ? "پاسخ با "+labels[chosen]+" و "+data.context_characters+" نویسه context ساخته شد." : "هشدار: پاسخ به قطعهٔ بازیابی‌شده ارجاع نداده است؛ grounding را بررسی کنید."}catch(error){renderChat();status.className="status error";status.textContent=error.message}finally{submit.disabled=false;compare.disabled=false;reset.disabled=false}});
+renderChat();setMode(chosen);
+</script></body></html>
