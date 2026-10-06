@@ -16,6 +16,7 @@ QUESTIONS = [
     "من دوره را خریدم؛ دسترسی من چه زمانی فعال می‌شود؟",
     "سفارش من را لغو کن و پولم را برگردان.",
 ]
+MAX_TURNS = 10
 
 
 def configuration() -> tuple[str, str, str, int]:
@@ -61,13 +62,27 @@ def load_prompt(path: Path) -> str:
     return prompt
 
 
-def ask_model(question: str, prompt_path: Path) -> str:
+def conversation_messages(question: str, prompt_path: Path, history: object) -> list[dict[str, str]]:
+    """Build the model input from this conversation's completed turns."""
+    if not isinstance(history, list) or len(history) % 2 or len(history) >= MAX_TURNS * 2:
+        raise ValueError("تاریخچه نامعتبر یا گفت‌وگو کامل است؛ گفت‌وگوی تازه را شروع کنید.")
+    messages = [{"role": "system", "content": load_prompt(prompt_path)}]
+    for index, item in enumerate(history):
+        role = "user" if index % 2 == 0 else "assistant"
+        if not isinstance(item, dict) or item.get("role") != role:
+            raise ValueError("ترتیب پیام‌های تاریخچه نامعتبر است.")
+        content = item.get("content")
+        if not isinstance(content, str) or not content.strip() or len(content) > 8000:
+            raise ValueError("متن یکی از پیام‌های تاریخچه نامعتبر است.")
+        messages.append({"role": role, "content": content})
+    messages.append({"role": "user", "content": question})
+    return messages
+
+
+def ask_model(question: str, prompt_path: Path, history: object) -> str:
     base, key, model, timeout = configuration()
     endpoint = base if base.endswith("/chat/completions") else base + "/chat/completions"
-    payload = {"model": model, "messages": [
-        {"role": "system", "content": load_prompt(prompt_path)},
-        {"role": "user", "content": question},
-    ]}
+    payload = {"model": model, "messages": conversation_messages(question, prompt_path, history)}
     http_request = request.Request(
         endpoint,
         data=json.dumps(payload, ensure_ascii=False).encode("utf-8"),
@@ -128,13 +143,15 @@ def serve(version_dir: Path, port: int) -> None:
                 return
             try:
                 length = int(self.headers.get("Content-Length", "0"))
-                if not 0 < length <= 8192:
-                    raise ValueError("متن سؤال باید کوتاه‌تر باشد.")
+                if not 0 < length <= 180_000:
+                    raise ValueError("درخواست بیش از حد بزرگ است؛ گفت‌وگوی تازه را شروع کنید.")
                 payload = json.loads(self.rfile.read(length))
+                if not isinstance(payload, dict):
+                    raise ValueError("درخواست باید یک شیء JSON باشد.")
                 question = payload.get("question")
                 if not isinstance(question, str) or not question.strip() or len(question) > 2000:
                     raise ValueError("یک سؤال کوتاه وارد کنید.")
-                answer = ask_model(question.strip(), prompt_path)
+                answer = ask_model(question.strip(), prompt_path, payload.get("history", []))
                 self.send_json(200, {"answer": answer})
             except (ValueError, json.JSONDecodeError) as exc:
                 self.send_json(400, {"error": str(exc)})

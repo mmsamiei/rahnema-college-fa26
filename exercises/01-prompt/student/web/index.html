@@ -24,8 +24,14 @@
     .hint { color: #667085; font-size: 13px; }
     button.submit { border: 0; border-radius: 10px; background: #5b3db5; color: white; padding: 10px 22px; font: inherit; font-weight: 700; cursor: pointer; }
     button:disabled { opacity: .6; cursor: wait; }
-    .answer { white-space: pre-wrap; line-height: 2; min-height: 70px; }
-    .empty { color: #98a2b3; }
+    .chat { display: flex; flex-direction: column; gap: 12px; min-height: 90px; max-height: 440px; overflow: auto; padding: 4px 2px 16px; }
+    .bubble { max-width: 90%; white-space: pre-wrap; line-height: 1.9; border-radius: 14px; padding: 10px 14px; }
+    .bubble strong { display: block; font-size: 12px; margin-bottom: 3px; }
+    .bubble.user { align-self: flex-start; background: #f3f0ff; }
+    .bubble.assistant { align-self: flex-end; background: #f1f4f9; }
+    .chat-head { display: flex; justify-content: space-between; align-items: center; gap: 12px; }
+    .reset { border: 1px solid #d0d5dd; background: white; border-radius: 9px; padding: 7px 11px; font: inherit; cursor: pointer; }
+    .status { min-height: 24px; margin: 4px 0; font-size: 14px; color: #667085; }
     .error { color: #b42318; }
     @media(max-width: 600px) { main { margin: 22px auto; } .card { padding: 16px; } .row { align-items: flex-start; flex-direction: column; } }
   </style>
@@ -38,22 +44,63 @@
   <section class="card">
     <h2>سؤال‌های آماده</h2>
     <div class="examples" id="examples" aria-label="سؤال‌های آماده"></div>
-    <form id="form">
-      <label for="question">سؤال شما</label>
-      <textarea id="question" maxlength="2000" placeholder="سؤالتان را اینجا بنویسید..." required></textarea>
-      <div class="row"><span class="hint">هر بار ارسال، یک درخواست واقعی به مدل می‌فرستد.</span><button class="submit" id="submit" type="submit">ارسال به مدل</button></div>
-    </form>
   </section>
-  <section class="card" aria-live="polite">
-    <h2>پاسخ مدل</h2>
-    <div id="answer" class="answer empty">هنوز سؤالی ارسال نشده است.</div>
+  <section class="card">
+    <div class="chat-head"><h2>گفت‌وگو</h2><button class="reset" id="reset" type="button">گفت‌وگوی تازه</button></div>
+    <div id="chat" class="chat" aria-live="polite"></div>
+    <form id="form">
+      <label for="question">پیام بعدی شما</label>
+      <textarea id="question" maxlength="2000" placeholder="سؤالتان را اینجا بنویسید..." required></textarea>
+      <div class="row"><span class="hint">هر گفت‌وگو تا ۱۰ نوبت ادامه دارد. هر پیام به مدل واقعی فرستاده می‌شود.</span><button class="submit" id="submit" type="submit">ارسال به مدل</button></div>
+      <p id="status" class="status" role="status"></p>
+    </form>
   </section>
 </main>
 <script>
 const form = document.getElementById("form");
 const input = document.getElementById("question");
-const answer = document.getElementById("answer");
+const chat = document.getElementById("chat");
+const status = document.getElementById("status");
 const submit = document.getElementById("submit");
+const reset = document.getElementById("reset");
+const storageKey = "rahnema-prompt-conversation";
+let history = [];
+try {
+  const saved = JSON.parse(sessionStorage.getItem(storageKey) || "[]");
+  if (Array.isArray(saved)) history = saved;
+} catch { /* Start a fresh conversation if local data is invalid. */ }
+function addBubble(role, content) {
+  if (chat.firstElementChild?.classList.contains("hint")) chat.replaceChildren();
+  const bubble = document.createElement("div");
+  bubble.className = "bubble " + role;
+  const label = document.createElement("strong");
+  label.textContent = role === "user" ? "شما" : "دستیار";
+  const text = document.createElement("span");
+  text.textContent = content;
+  bubble.append(label, text);
+  chat.append(bubble);
+  chat.scrollTop = chat.scrollHeight;
+}
+function renderHistory() {
+  chat.replaceChildren();
+  if (!history.length) {
+    const empty = document.createElement("p");
+    empty.className = "hint";
+    empty.textContent = "هنوز پیامی در این گفت‌وگو نیست.";
+    chat.append(empty);
+  }
+  for (const message of history) addBubble(message.role, message.content);
+}
+renderHistory();
+reset.addEventListener("click", () => {
+  history = [];
+  sessionStorage.removeItem(storageKey);
+  input.value = "";
+  status.textContent = "";
+  status.className = "status";
+  renderHistory();
+  input.focus();
+});
 fetch("/api/questions").then(r => r.json()).then(data => {
   for (const question of data.questions) {
     const button = document.createElement("button");
@@ -68,23 +115,36 @@ form.addEventListener("submit", async event => {
   event.preventDefault();
   const question = input.value.trim();
   if (!question || submit.disabled) return;
+  if (history.length >= 20) {
+    status.className = "status error";
+    status.textContent = "۱۰ نوبت کامل شد؛ گفت‌وگوی تازه را شروع کنید.";
+    return;
+  }
   submit.disabled = true;
-  answer.className = "answer empty";
-  answer.textContent = "در حال دریافت پاسخ...";
+  reset.disabled = true;
+  status.className = "status";
+  status.textContent = "";
+  renderHistory();
+  addBubble("user", question);
+  addBubble("assistant", "در حال دریافت پاسخ...");
   try {
     const response = await fetch("/api/ask", {
       method: "POST", headers: {"Content-Type": "application/json"},
-      body: JSON.stringify({question})
+      body: JSON.stringify({question, history})
     });
     const data = await response.json();
     if (!response.ok) throw new Error(data.error || "خطای ناشناخته");
-    answer.className = "answer";
-    answer.textContent = data.answer;
+    history.push({role: "user", content: question}, {role: "assistant", content: data.answer});
+    sessionStorage.setItem(storageKey, JSON.stringify(history));
+    input.value = "";
+    renderHistory();
   } catch (error) {
-    answer.className = "answer error";
-    answer.textContent = error.message;
+    renderHistory();
+    status.className = "status error";
+    status.textContent = error.message;
   } finally {
     submit.disabled = false;
+    reset.disabled = false;
   }
 });
 </script>
