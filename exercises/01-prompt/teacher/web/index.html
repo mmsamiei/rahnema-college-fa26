@@ -1,0 +1,92 @@
+<!doctype html>
+<html lang="fa" dir="rtl">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>تمرین ۱ — دموی مدرس</title>
+  <style>
+    :root { font-family: system-ui, -apple-system, sans-serif; color: #1d2939; background: #f6f7fb; }
+    * { box-sizing: border-box; }
+    body { margin: 0; }
+    main { width: min(850px, calc(100% - 32px)); margin: 44px auto; }
+    .eyebrow { color: #5850a3; font-weight: 700; }
+    h1 { font-size: clamp(25px, 4vw, 36px); margin: 10px 0; }
+    .sub { color: #566073; line-height: 1.9; margin: 0 0 24px; }
+    .card { background: white; border: 1px solid #e4e7ec; border-radius: 18px; padding: 22px; box-shadow: 0 8px 30px #3440540b; margin-top: 18px; }
+    .card h2 { font-size: 17px; margin: 0 0 14px; }
+    .examples { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 18px; }
+    .example { background: #f3f0ff; border: 1px solid #ded6ff; color: #423291; border-radius: 999px; padding: 9px 13px; font: inherit; cursor: pointer; text-align: right; }
+    .example:hover { background: #e9e2ff; }
+    label { display: block; font-weight: 700; margin-bottom: 8px; }
+    textarea { width: 100%; min-height: 110px; resize: vertical; border: 1px solid #c9cdd7; border-radius: 11px; padding: 13px; font: inherit; line-height: 1.8; }
+    textarea:focus { outline: 2px solid #8d75dc; border-color: transparent; }
+    .row { display: flex; justify-content: space-between; align-items: center; gap: 16px; margin-top: 12px; }
+    .hint { color: #667085; font-size: 13px; }
+    button.submit { border: 0; border-radius: 10px; background: #5b3db5; color: white; padding: 10px 22px; font: inherit; font-weight: 700; cursor: pointer; }
+    button:disabled { opacity: .6; cursor: wait; }
+    .answer { white-space: pre-wrap; line-height: 2; min-height: 70px; }
+    .empty { color: #98a2b3; }
+    .error { color: #b42318; }
+    @media(max-width: 600px) { main { margin: 22px auto; } .card { padding: 16px; } .row { align-items: flex-start; flex-direction: column; } }
+  </style>
+</head>
+<body>
+<main>
+  <div class="eyebrow">رهنما کالج · تمرین ۱ · دموی مدرس</div>
+  <h1>یک دستیار پشتیبانی، فقط با LLM</h1>
+  <p class="sub">این دستیار هنوز به قوانین اختصاصی، ثبت‌نام‌ها یا ابزار انجام کار دسترسی ندارد. سؤال‌های یکسان را اجرا کنید و ببینید پاسخ چه ادعایی می‌کند.</p>
+  <section class="card">
+    <h2>سؤال‌های آماده</h2>
+    <div class="examples" id="examples" aria-label="سؤال‌های آماده"></div>
+    <form id="form">
+      <label for="question">سؤال شما</label>
+      <textarea id="question" maxlength="2000" placeholder="سؤالتان را اینجا بنویسید..." required></textarea>
+      <div class="row"><span class="hint">هر بار ارسال، یک درخواست واقعی به مدل می‌فرستد.</span><button class="submit" id="submit" type="submit">ارسال به مدل</button></div>
+    </form>
+  </section>
+  <section class="card" aria-live="polite">
+    <h2>پاسخ مدل</h2>
+    <div id="answer" class="answer empty">هنوز سؤالی ارسال نشده است.</div>
+  </section>
+</main>
+<script>
+const form = document.getElementById("form");
+const input = document.getElementById("question");
+const answer = document.getElementById("answer");
+const submit = document.getElementById("submit");
+fetch("/api/questions").then(r => r.json()).then(data => {
+  for (const question of data.questions) {
+    const button = document.createElement("button");
+    button.type = "button";
+    button.className = "example";
+    button.textContent = question;
+    button.addEventListener("click", () => { input.value = question; input.focus(); });
+    document.getElementById("examples").append(button);
+  }
+}).catch(() => { document.getElementById("examples").textContent = "سؤال‌های آماده بارگذاری نشدند."; });
+form.addEventListener("submit", async event => {
+  event.preventDefault();
+  const question = input.value.trim();
+  if (!question || submit.disabled) return;
+  submit.disabled = true;
+  answer.className = "answer empty";
+  answer.textContent = "در حال دریافت پاسخ...";
+  try {
+    const response = await fetch("/api/ask", {
+      method: "POST", headers: {"Content-Type": "application/json"},
+      body: JSON.stringify({question})
+    });
+    const data = await response.json();
+    if (!response.ok) throw new Error(data.error || "خطای ناشناخته");
+    answer.className = "answer";
+    answer.textContent = data.answer;
+  } catch (error) {
+    answer.className = "answer error";
+    answer.textContent = error.message;
+  } finally {
+    submit.disabled = false;
+  }
+});
+</script>
+</body>
+</html>
