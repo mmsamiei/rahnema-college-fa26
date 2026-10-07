@@ -16,8 +16,8 @@
 <article class="step"><span class="tag">نوبت ۱ · خواندن</span><div><strong>کاربر → مدل → ابزار list_my_orders</strong><p>سؤال و تاریخچه به LLM می‌روند؛ مدل درخواست فهرست سفارش‌ها را می‌دهد؛ Python فایل‌ها را می‌خواند و نتیجه را به مدل برمی‌گرداند.</p></div></article>
 <article class="step"><span class="tag">پاسخ ۱</span><div><strong>مدل → کاربر</strong><p>دستیار سفارش‌ها را با شماره و شناسه توضیح می‌دهد؛ صفحه این پیام را در تاریخچه نگه می‌دارد.</p></div></article>
 <article class="step"><span class="tag">نوبت ۲ · زمینه</span><div><strong>کاربر → مدل</strong><p>پیام تازه همراه نوبت قبل ارسال می‌شود؛ مثلاً «دومی را لغو کن» به سفارش فهرست‌شده ارجاع می‌دهد.</p></div></article>
-<article class="step write"><span class="tag">مجوز اقدام</span><div><strong>پیام صریح کاربر → ابزار cancel_enrollment</strong><p>دکمهٔ تأیید جدا نیست؛ ابزار لغو فقط وقتی در دسترس مدل است که پیام فعلی صریحاً درخواست لغو داشته باشد.</p></div></article>
-<article class="step local"><span class="tag">کنترل و نوشتن در Python</span><div><strong>بررسی مالکیت + وضعیت pending + شروع‌نشدن جلسه</strong><p>فقط اگر هر سه شرط برقرار باشند، Python وضعیت همان ثبت‌نام را در JSON به cancelled تغییر می‌دهد؛ بازپرداختی انجام نمی‌شود.</p></div></article>
+<article class="step write"><span class="tag">انتخاب ابزار توسط مدل</span><div><strong>پیام + تاریخچه → انتخاب cancel_enrollment</strong><p>همهٔ ابزارها همیشه به مدل داده می‌شوند؛ مدل از معنای مکالمه تشخیص می‌دهد کاربر اقدام می‌خواهد یا فقط اطلاعات. لازم نیست کلمهٔ خاصی به‌کار ببرد.</p></div></article>
+<article class="step local"><span class="tag">کنترل و نوشتن در Python</span><div><strong>بررسی مالکیت + وضعیت pending + شروع‌نشدن جلسه</strong><p>فقط اگر هر سه شرط برقرار باشند، Python وضعیت همان ثبت‌نام را در JSON به cancelled تغییر می‌دهد؛ وگرنه دلیل رد را به مدل می‌دهد. بازپرداختی انجام نمی‌شود.</p></div></article>
 <article class="step"><span class="tag">نتیجهٔ نوبت ۲</span><div><strong>نتیجهٔ ابزار → LLM → کاربر</strong><p>نتیجه با نقش tool به مدل برمی‌گردد تا فقط بر اساس تغییر واقعی پاسخ بدهد.</p></div></article>
 </div></section>
 

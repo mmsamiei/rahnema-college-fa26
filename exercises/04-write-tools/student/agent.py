@@ -12,8 +12,9 @@ CURRENT_USER_ID = "u-104"  # trusted demo identity; never supplied by the model
 PROMPT = """شما دستیار پشتیبانی فارسی پلتفرم فرضی رهنما هستید.
 برای پرسش دربارهٔ سفارش‌ها از ابزار خواندن استفاده کنید و شناسه‌ها را در پاسخ بیاورید.
 تاریخچه را بخوانید تا اشاره‌هایی مثل «دومی» را به سفارش درست وصل کنید.
-فقط وقتی پیام فعلی کاربر صریحاً درخواست لغو دارد، ابزار لغو را به‌کار ببرید.
+ابزار لغو همیشه در دسترس است؛ از معنای مکالمه تشخیص دهید آیا کاربر واقعاً خواهان لغو است.
 درخواست «حذف سفارش/ثبت‌نام» در این دمو یعنی لغو ثبت‌نام، نه حذف دائمی اطلاعات.
+اگر کاربر فقط وضعیت می‌پرسد، از ابزار لغو استفاده نکنید.
 اگر منظور کاربر یا ثبت‌نام هدف مبهم است، سؤال روشن‌کننده بپرسید و هیچ تغییری ندهید.
 لغو فقط برای ثبت‌نام pending و پیش از شروع جلسهٔ اول مجاز است.
 فقط نتیجهٔ ابزار را گزارش کنید. این تمرین فقط وضعیت ثبت‌نام را لغو می‌کند و پول را بازنمی‌گرداند."""
@@ -103,21 +104,11 @@ def get_payment_status(order_id: str) -> dict:
 
 
 def cancel_enrollment(enrollment_id: str) -> dict:
-    # TODO 3: مالکیت و شرایط را بررسی کنید؛ فقط بعد از درخواست صریح، JSON را تغییر دهید.
+    # TODO 3: مالکیت و شرایط را بررسی کنید؛ در صورت رد، دلیل بدهید وگرنه JSON را تغییر دهید.
     raise NotImplementedError("ابزار لغو ثبت‌نام را پیاده‌سازی کنید.")
 
 
-def action_was_requested(question: str) -> bool:
-    text = " ".join(question.lower().split())
-    explicit_phrases = (
-        "لغو کن", "لغوش کن", "کنسل کن", "کنسلش کن",
-        "حذف کن", "حذفش کن", "پاک کن", "پاکش کن",
-        "delete it", "delete this", "cancel it", "cancel this",
-    )
-    return any(phrase in text for phrase in explicit_phrases)
-
-
-def run_tool(tool_call: dict, allow_cancel: bool) -> dict:
+def run_tool(tool_call: dict) -> dict:
     try:
         name = tool_call["function"]["name"]
         arguments = json.loads(tool_call["function"]["arguments"])
@@ -125,9 +116,7 @@ def run_tool(tool_call: dict, allow_cancel: bool) -> dict:
         raise ValueError("درخواست ابزار قالب درستی ندارد.") from exc
     functions = {"list_my_orders": list_my_orders, "get_enrollment_status": get_enrollment_status,
                  "get_payment_status": get_payment_status}
-    if allow_cancel:
-        # TODO 4: ابزار نوشتن را فقط وقتی پیام فعلی درخواست لغو دارد به dispatch اضافه کنید.
-        pass
+    # TODO 4: تابع cancel_enrollment را به dispatch اضافه کنید.
     if name not in functions or not isinstance(arguments, dict):
         raise ValueError("این ابزار در این پیام مجاز نیست یا آرگومان‌های آن معتبر نیستند.")
     try:
@@ -148,10 +137,9 @@ def answer(question: str, history: object) -> dict:
             raise ValueError("متن یکی از پیام‌های تاریخچه معتبر نیست.")
         messages.append({"role": item["role"], "content": content})
     messages.append({"role": "user", "content": question})
-    allow_cancel = action_was_requested(question)
-    tools = READ_TOOLS + ([CANCEL_ENROLLMENT] if allow_cancel else [])
+    tools = READ_TOOLS + ([CANCEL_ENROLLMENT] if CANCEL_ENROLLMENT else [])
     events = []
-    emit(events, "model", "درخواست مدل", f"سؤال فعلی + {len(history)} پیام قبلی؛ ابزار لغو {'فعال است' if allow_cancel else 'در دسترس نیست'}.")
+    emit(events, "model", "درخواست مدل", f"سؤال فعلی + {len(history)} پیام قبلی؛ ابزارهای خواندن و لغو در اختیار مدل هستند.")
     first = ask_model(messages, tools)
     tool_calls = first.get("tool_calls") or []
     if not tool_calls:
@@ -162,7 +150,7 @@ def answer(question: str, history: object) -> dict:
         raise ValueError("در این تمرین هر نوبت فقط یک ابزار اجرا می‌شود.")
     tool_call = tool_calls[0]
     emit(events, "tool-call", "درخواست ابزار از مدل", json.dumps(tool_call["function"], ensure_ascii=False, indent=2))
-    result = run_tool(tool_call, allow_cancel)
+    result = run_tool(tool_call)
     emit(events, "tool-result", "نتیجهٔ Python", json.dumps(result, ensure_ascii=False, indent=2))
     messages.append({"role": "assistant", "content": first.get("content"), "tool_calls": tool_calls})
     messages.append({"role": "tool", "tool_call_id": tool_call["id"], "content": json.dumps(result, ensure_ascii=False)})
