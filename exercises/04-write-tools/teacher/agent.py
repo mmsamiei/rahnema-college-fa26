@@ -13,6 +13,7 @@ PROMPT = """شما دستیار پشتیبانی فارسی پلتفرم فرض�
 برای پرسش دربارهٔ سفارش‌ها از ابزار خواندن استفاده کنید و شناسه‌ها را در پاسخ بیاورید.
 تاریخچه را بخوانید تا اشاره‌هایی مثل «دومی» را به سفارش درست وصل کنید.
 فقط وقتی پیام فعلی کاربر صریحاً درخواست لغو دارد، ابزار لغو را به‌کار ببرید.
+درخواست «حذف سفارش/ثبت‌نام» در این دمو یعنی لغو ثبت‌نام، نه حذف دائمی اطلاعات.
 اگر منظور کاربر یا ثبت‌نام هدف مبهم است، سؤال روشن‌کننده بپرسید و هیچ تغییری ندهید.
 لغو فقط برای ثبت‌نام pending و پیش از شروع جلسهٔ اول مجاز است.
 فقط نتیجهٔ ابزار را گزارش کنید. این تمرین فقط وضعیت ثبت‌نام را لغو می‌کند و پول را بازنمی‌گرداند."""
@@ -127,8 +128,35 @@ def cancel_enrollment(enrollment_id: str) -> dict:
 
 def action_was_requested(question: str) -> bool:
     text = " ".join(question.lower().split())
-    explicit_phrases = ("لغو کن", "لغوش کن", "کنسل کن", "کنسلش کن", "cancel it", "cancel this")
+    explicit_phrases = (
+        "لغو کن", "لغوش کن", "کنسل کن", "کنسلش کن",
+        "حذف کن", "حذفش کن", "پاک کن", "پاکش کن",
+        "delete it", "delete this", "cancel it", "cancel this",
+    )
     return any(phrase in text for phrase in explicit_phrases)
+
+
+def result_summary(result: dict) -> str:
+    """Give a clear answer from the actual tool result if the model returns no text."""
+    if "ok" in result:
+        if result["ok"]:
+            return (f"ثبت‌نام {result.get('enrollment_id', '')} لغو شد. "
+                    "در این دمو بازپرداخت انجام نمی‌شود.")
+        return "لغو انجام نشد: " + result.get("message", "شرایط لغو برقرار نبود.")
+    if "orders" in result:
+        if not result["orders"]:
+            return "برای حساب آزمایشی سفارشی پیدا نشد."
+        lines = ["سفارش‌های حساب آزمایشی:"]
+        for order in result["orders"]:
+            lines.append(
+                f"{order['course']} — سفارش {order['order_id']}, "
+                f"ثبت‌نام {order['enrollment_id']}, وضعیت {order['enrollment_status']}"
+            )
+        return "\n".join(lines)
+    if "found" in result:
+        record = result.get("enrollment") or result.get("payment")
+        return "اطلاعات پیدا شد: " + json.dumps(record, ensure_ascii=False) if record else "رکوردی پیدا نشد."
+    return "ابزار اجرا شد، اما پاسخ مدل متنی نداشت. نتیجه: " + json.dumps(result, ensure_ascii=False)
 
 
 def run_tool(tool_call: dict, allow_cancel: bool) -> dict:
@@ -181,7 +209,9 @@ def answer(question: str, history: object) -> dict:
     messages.append({"role": "tool", "tool_call_id": tool_call["id"], "content": json.dumps(result, ensure_ascii=False)})
     emit(events, "model", "درخواست دوم مدل", "نتیجهٔ ابزار همراه تاریخچه برای پاسخ نهایی ارسال می‌شود.")
     final = ask_model(messages)
-    text = final.get("content") or "مدل پاسخ متنی برنگرداند."
+    text = final.get("content") or result_summary(result)
+    if final.get("tool_calls"):
+        emit(events, "warning", "درخواست ابزار اضافی", "این دمو در هر نوبت فقط یک رفت‌وبرگشت ابزار را اجرا می‌کند؛ نتیجهٔ ابزار اجراشده در پاسخ جایگزین نمایش داده شد.")
     emit(events, "answer", "پاسخ دستیار", text)
     return {"answer": text, "events": events}
 
