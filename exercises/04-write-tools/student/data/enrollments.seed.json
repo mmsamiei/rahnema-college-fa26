@@ -1,0 +1,26 @@
+[
+  {
+    "enrollment_id": "en-1042",
+    "order_id": "or-7701",
+    "user_id": "u-104",
+    "course": "Python برای تحلیل داده",
+    "status": "active",
+    "first_session_started": true
+  },
+  {
+    "enrollment_id": "en-1043",
+    "order_id": "or-7702",
+    "user_id": "u-104",
+    "course": "مبانی یادگیری ماشین",
+    "status": "pending",
+    "first_session_started": false
+  },
+  {
+    "enrollment_id": "en-2081",
+    "order_id": "or-8801",
+    "user_id": "u-208",
+    "course": "Python برای تحلیل داده",
+    "status": "active",
+    "first_session_started": true
+  }
+]
