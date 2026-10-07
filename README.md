@@ -74,6 +74,16 @@ python3 exercises/05-agent-loop/student/app.py
 
 صفحهٔ دانشجو در `http://127.0.0.1:8781` و دموی مدرس در `http://127.0.0.1:8782` است. راهنمای دانشجو در [تمرین Agent loop](exercises/05-agent-loop/student/INSTRUCTIONS.md) و سناریوی کلاس در [دموی مدرس](exercises/05-agent-loop/teacher/DEMO.md) قرار دارد.
 
+## تمرین ۶: Planning در حلقهٔ Agent
+
+مدل در ابتدای هر دور، برنامهٔ گام‌های باقی‌مانده را با ابزار `record_plan` ثبت می‌کند؛ سپس یک ابزار عملیاتی را اجرا می‌کند یا پاسخ نهایی می‌دهد. حلقه پس از ۷ اجرای عملیاتی متوقف می‌شود.
+
+```bash
+python3 exercises/06-planning/student/app.py
+```
+
+صفحهٔ دانشجو در `http://127.0.0.1:8783` و دموی مدرس در `http://127.0.0.1:8784` است. راهنمای دانشجو در [تمرین Planning](exercises/06-planning/student/INSTRUCTIONS.md) و سناریوی کلاس در [دموی مدرس](exercises/06-planning/teacher/DEMO.md) قرار دارد.
+
 ## مسیر بعدی
 
-پس از دیدن حلقهٔ ساده در Python، می‌توانیم همین مسئله را در تمرین بعد با یک Framework بازسازی کنیم و تفاوت‌هایش را مقایسه کنیم.
+پس از Planning، می‌توانیم همین دستیار را با یک Framework بازسازی کنیم و ببینیم framework کدام بخش‌های حلقه را ساده می‌کند.
