@@ -1,0 +1,6 @@
+[
+  {"enrollment_id":"en-1042","user_id":"u-104","status":"active","updated_at":"2026-10-01"},
+  {"enrollment_id":"en-1043","user_id":"u-104","status":"inactive","reason":"پرداخت ثبت شده اما ساخت دسترسی هنوز انجام نشده است."},
+  {"enrollment_id":"en-1044","user_id":"u-104","status":"inactive","reason":"پرداخت ناموفق بوده است."},
+  {"enrollment_id":"en-2081","user_id":"u-208","status":"active","updated_at":"2026-10-01"}
+]

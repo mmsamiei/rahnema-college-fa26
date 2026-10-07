@@ -1,0 +1,44 @@
+<!doctype html>
+<html lang="fa" dir="rtl">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>تمرین ۵ — دموی مدرس</title>
+<style>
+*{box-sizing:border-box}body{margin:0;background:#f6f7fb;color:#182230;font-family:system-ui,-apple-system,sans-serif}main{width:min(940px,calc(100% - 30px));margin:36px auto 60px}.eyebrow{color:#5850a3;font-weight:700}h1{font-size:clamp(25px,4vw,36px);margin:8px 0}.sub{color:#566073;line-height:1.9}.card{background:#fff;border:1px solid #e4e7ec;border-radius:16px;padding:19px;margin-top:15px;box-shadow:0 8px 30px #3440540b}h2{font-size:17px;margin:0 0 12px}.hint,.status{color:#667085;font-size:13px;line-height:1.8}.examples,.controls{display:flex;gap:8px;flex-wrap:wrap}.example{font:inherit;cursor:pointer;border:1px solid #ded6ff;border-radius:999px;padding:7px 11px;background:#f3f0ff;color:#423291}.secondary{font:inherit;cursor:pointer;border:1px solid #d0d5dd;border-radius:9px;padding:8px 12px;background:#fff;color:#344054}.primary{font:inherit;cursor:pointer;border:0;border-radius:9px;padding:10px 16px;background:#5b3db5;color:#fff;font-weight:700}button:disabled{opacity:.55;cursor:wait}textarea{width:100%;min-height:78px;border:1px solid #c9cdd7;border-radius:10px;padding:12px;font:inherit;line-height:1.8}.row{display:flex;justify-content:space-between;align-items:center;gap:12px;margin-top:10px}.architecture{display:grid;gap:8px}.step{display:grid;grid-template-columns:130px 1fr;gap:12px;padding:10px 12px;border:1px solid #eaecf0;border-radius:10px;background:#fcfcfd}.step strong{display:block}.step p{margin:3px 0 0;color:#475467;line-height:1.7}.tag{font-size:12px;font-weight:800;color:#5b3db5}.local{background:#f4fbf7;border-color:#b7e4ca}.local .tag{color:#067647}.write{background:#fff8ed;border-color:#fedf89}.write .tag{color:#b54708}.chat,.trace{display:flex;flex-direction:column;gap:9px}.bubble{max-width:92%;border-radius:12px;padding:10px 13px;white-space:pre-wrap;line-height:1.8}.user{align-self:flex-start;background:#f3f0ff}.assistant{align-self:flex-end;background:#f1f4f9}.event{border-right:3px solid #7658d3;padding:8px 12px;background:#faf8ff;border-radius:8px}.event h3{font-size:14px;margin:0 0 6px}.event pre{white-space:pre-wrap;overflow-wrap:anywhere;margin:0;font:13px/1.7 ui-monospace,monospace}.error{color:#b42318}@media(max-width:640px){.row{align-items:stretch;flex-direction:column}.step{grid-template-columns:1fr;gap:3px}.card{padding:15px}}
+</style>
+</head>
+<body><main>
+<div class="eyebrow">رهنما کالج · تمرین ۵ · دموی مدرس</div>
+<h1>Agent چطور با چند گام مسئله را حل می‌کند؟</h1>
+<p class="sub">از دستیار بخواهید مشکل پرداخت و دسترسی یک دوره را بررسی کند. مدل ابزارها را یکی‌یکی انتخاب می‌کند، نتیجهٔ هر ابزار را می‌بیند و دربارهٔ گام بعد تصمیم می‌گیرد؛ در پایان پاسخ می‌دهد یا پس از سقف ۵ ابزار متوقف می‌شود.</p>
+
+<section class="card"><h2>معماری مکالمه و ابزار</h2><div class="architecture">
+<article class="step"><span class="tag">شروع</span><div><strong>کاربر → مدل → ابزار list_my_enrollments</strong><p>مدل دوره و شناسهٔ ثبت‌نام و سفارش را از دادهٔ همان کاربر پیدا می‌کند.</p></div></article>
+<article class="step"><span class="tag">مشاهدهٔ اول</span><div><strong>مدل → get_payment_status</strong><p>نتیجهٔ ابزار قبلی به مدل برمی‌گردد؛ مدل شناسهٔ سفارش را برای بررسی پرداخت به کار می‌گیرد.</p></div></article>
+<article class="step"><span class="tag">مشاهدهٔ دوم</span><div><strong>مدل → get_course_access</strong><p>مدل حالا وضعیت دسترسی همان ثبت‌نام را می‌خواند و آن را با پرداخت مقایسه می‌کند.</p></div></article>
+<article class="step write"><span class="tag">تصمیم</span><div><strong>اگر پرداخت موفق و دسترسی غیرفعال بود → create_access_ticket</strong><p>مدل با شواهدی که جمع کرده ابزار ساخت تیکت را انتخاب می‌کند؛ Python شرایط و تکراری‌نبودن تیکت را بررسی می‌کند.</p></div></article>
+<article class="step local"><span class="tag">حلقه و شرط توقف</span><div><strong>درخواست ابزار → اجرای Python → نتیجه به مدل</strong><p>Agent تا پاسخ نهایی یا سقف ۵ اجرای ابزار ادامه می‌دهد؛ در سقف، ابزار دیگری اجرا نمی‌شود و مدل فقط جمع‌بندی می‌کند.</p></div></article>
+<article class="step"><span class="tag">پایان</span><div><strong>مدل → پاسخ به کاربر</strong><p>پاسخ باید بگوید چه چیز بررسی شد، تیکت ساخته شد یا چرا نیازی نبود، و شمارهٔ تیکت را در صورت وجود بیاورد.</p></div></article>
+</div></section>
+
+<section class="card"><h2>پرسش‌های نمونه</h2><div class="examples">
+<button class="example" type="button">پول دوره مبانی یادگیری ماشین از حسابم کم شده ولی هنوز دسترسی ندارم؛ بررسی کن و اگر مغایرت تأیید شد تیکت بساز.</button>
+<button class="example" type="button">دسترسی من به دوره پایتون فعاله؟</button>
+<button class="example" type="button">برای دوره مبانی هوش مصنوعی پول پرداخت کردم؟</button>
+</div><p class="hint">ردّ هر چرخهٔ مدل، ابزار، نتیجه و تصمیم بعدی را در بخش پایین دنبال کنید.</p></section>
+
+<section class="card"><form id="form"><label for="question">پیام کاربر</label><textarea id="question" maxlength="2000" required placeholder="مثلاً: پول دوره کم شده ولی دسترسی ندارم؛ بررسی کن."></textarea><div class="row"><span id="status" class="status">تاریخچه فقط در همین تب مرورگر نگه داشته می‌شود.</span><button id="send" class="primary">ارسال پیام</button></div></form></section>
+<section class="card"><div class="row"><h2>مکالمه</h2><div class="controls"><button id="new-chat" class="secondary" type="button">گفت‌وگوی تازه</button><button id="reset-data" class="secondary" type="button">بازنشانی داده</button></div></div><div id="chat" class="chat"></div></section>
+<section class="card"><h2>ردّ اجرای ابزارها</h2><div id="trace" class="trace"><p class="hint">پس از ارسال پیام، درخواست مدل و اجرای تابع Python اینجا دیده می‌شود.</p></div></section>
+</main>
+<script>
+const input=document.getElementById('question'),form=document.getElementById('form'),chat=document.getElementById('chat'),trace=document.getElementById('trace'),status=document.getElementById('status'),send=document.getElementById('send');
+const key='rahnema-ex05-chat-teacher';let history=[];try{history=JSON.parse(sessionStorage.getItem(key)||'[]')}catch{}
+function renderChat(){chat.replaceChildren();history.forEach(item=>{const bubble=document.createElement('div');bubble.className='bubble '+item.role;bubble.textContent=item.content;chat.append(bubble)});chat.scrollTop=chat.scrollHeight}
+function addEvents(events){if(trace.querySelector('.hint'))trace.replaceChildren();events.forEach(event=>{const box=document.createElement('article');box.className='event';const title=document.createElement('h3');title.textContent=event.title;const details=document.createElement('pre');details.textContent=event.details;box.append(title,details);trace.append(box)})}
+document.querySelectorAll('.example').forEach(button=>button.addEventListener('click',()=>{input.value=button.textContent;input.focus()}));
+form.addEventListener('submit',async event=>{event.preventDefault();const question=input.value.trim();if(!question||send.disabled)return;if(history.length>=20){status.textContent='گفت‌وگو طولانی شده؛ گفت‌وگوی تازه را شروع کنید.';return}send.disabled=true;status.textContent='در حال پردازش پیام...';history.push({role:'user',content:question});renderChat();try{const response=await fetch('/api/ask',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({question,history:history.slice(0,-1)})});const data=await response.json();if(!response.ok)throw new Error(data.error||'درخواست ناموفق بود.');history.push({role:'assistant',content:data.answer});sessionStorage.setItem(key,JSON.stringify(history));renderChat();addEvents(data.events);input.value='';status.textContent='مراحل این نوبت در ترمینال هم چاپ شدند.'}catch(error){history.pop();renderChat();status.textContent=error.message;status.className='status error'}finally{send.disabled=false}});
+document.getElementById('new-chat').addEventListener('click',()=>{history=[];sessionStorage.removeItem(key);renderChat();input.focus();status.textContent='تاریخچهٔ مکالمه پاک شد؛ داده‌ها تغییر نکردند.'});
+document.getElementById('reset-data').addEventListener('click',async()=>{const button=document.getElementById('reset-data');button.disabled=true;try{const response=await fetch('/api/reset',{method:'POST',headers:{'Content-Type':'application/json'},body:'{}'});if(!response.ok)throw new Error('بازنشانی داده انجام نشد.');history=[];sessionStorage.removeItem(key);renderChat();trace.replaceChildren();status.textContent='فایل ثبت‌نام‌ها به دادهٔ اولیه برگشت.'}catch(error){status.textContent=error.message;status.className='status error'}finally{button.disabled=false}});
+renderChat();
+</script></body></html>
