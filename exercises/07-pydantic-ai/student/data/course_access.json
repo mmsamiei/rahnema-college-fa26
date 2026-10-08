@@ -1,0 +1,14 @@
+[
+  {
+    "user_id": "u-104",
+    "course_name": "مبانی یادگیری ماشین",
+    "access_status": "inactive",
+    "note": "پرداخت ثبت شده، اما دسترسی هنوز فعال نشده است."
+  },
+  {
+    "user_id": "u-208",
+    "course_name": "مبانی یادگیری ماشین",
+    "access_status": "active",
+    "note": "دسترسی دوره فعال است."
+  }
+]

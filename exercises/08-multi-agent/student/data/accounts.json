@@ -1,0 +1,14 @@
+{
+  "payments": [
+    {"payment_id":"pay-5101","user_id":"u-104","course_id":"c-201","course_name":"مبانی یادگیری ماشین","status":"paid","amount":4200000,"paid_at":"2026-09-18"},
+    {"payment_id":"pay-5102","user_id":"u-208","course_id":"c-201","course_name":"مبانی یادگیری ماشین","status":"failed","amount":4200000,"paid_at":null},
+    {"payment_id":"pay-5103","user_id":"u-104","course_id":"c-102","course_name":"Python برای تحلیل داده","status":"paid","amount":3200000,"paid_at":"2026-08-21"},
+    {"payment_id":"pay-5104","user_id":"u-317","course_id":"c-204","course_name":"ساخت اپلیکیشن با مدل‌های زبانی","status":"paid","amount":2500000,"paid_at":"2026-09-27"}
+  ],
+  "enrollments": [
+    {"enrollment_id":"en-7101","user_id":"u-104","course_id":"c-201","course_name":"مبانی یادگیری ماشین","status":"active","access_enabled":false,"started":false},
+    {"enrollment_id":"en-7102","user_id":"u-208","course_id":"c-201","course_name":"مبانی یادگیری ماشین","status":"pending","access_enabled":false,"started":false},
+    {"enrollment_id":"en-7103","user_id":"u-104","course_id":"c-102","course_name":"Python برای تحلیل داده","status":"active","access_enabled":true,"started":true},
+    {"enrollment_id":"en-7104","user_id":"u-317","course_id":"c-204","course_name":"ساخت اپلیکیشن با مدل‌های زبانی","status":"active","access_enabled":true,"started":true}
+  ]
+}

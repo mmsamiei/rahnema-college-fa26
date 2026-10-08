@@ -84,6 +84,33 @@ python3 exercises/06-planning/student/app.py
 
 صفحهٔ دانشجو در `http://127.0.0.1:8783` و دموی مدرس در `http://127.0.0.1:8784` است. راهنمای دانشجو در [تمرین Planning](exercises/06-planning/student/INSTRUCTIONS.md) و سناریوی کلاس در [دموی مدرس](exercises/06-planning/teacher/DEMO.md) قرار دارد.
 
-## مسیر بعدی
+## تمرین ۷: Agent و Deps با Pydantic AI
 
-پس از Planning، می‌توانیم همین دستیار را با یک Framework بازسازی کنیم و ببینیم framework کدام بخش‌های حلقه را ساده می‌کند.
+این تمرین یک Agent و یک ابزار خواندنی را با Pydantic AI می‌سازد. دانشجو می‌بیند `deps` چطور از اجرای Agent به ابزار می‌رسد و خود framework رفت‌وبرگشت ابزار را مدیریت می‌کند.
+
+یک virtual environment بسازید و وابستگی تمرین را نصب کنید:
+
+```bash
+python3.12 -m venv .venv
+source .venv/bin/activate
+python -m pip install -r exercises/07-pydantic-ai/requirements.txt
+```
+
+نسخهٔ دانشجو در `http://127.0.0.1:8785` و دموی مدرس در `http://127.0.0.1:8786` اجرا می‌شوند. هر نسخه را در ترمینال جدا اجرا کنید:
+
+```bash
+.venv/bin/python exercises/07-pydantic-ai/student/app.py
+.venv/bin/python exercises/07-pydantic-ai/teacher/app.py
+```
+
+راهنمای دانشجو در [تمرین Pydantic AI](exercises/07-pydantic-ai/student/INSTRUCTIONS.md) و راهنمای دموی مدرس در [سناریوی مدرس](exercises/07-pydantic-ai/teacher/DEMO.md) است.
+
+## تمرین ۸: چندایجنتی و واگذاری کار
+
+دستیار اصلی می‌تواند بررسی وضعیت حساب را به ایجنت حساب کاربر و پیشنهاد دوره را به ایجنت کاتالوگ بسپارد. صفحه مسیر هر واگذاری و ابزارهای داخلی متخصص‌ها را نشان می‌دهد.
+
+```bash
+python exercises/08-multi-agent/student/app.py
+```
+
+نسخهٔ دانشجو در `http://127.0.0.1:8787` و دموی مدرس در `http://127.0.0.1:8788` اجرا می‌شوند. برای این تمرین همان `.venv` و وابستگی Pydantic AI تمرین ۷ استفاده می‌شود. راهنمای دانشجو در [تمرین چندایجنتی](exercises/08-multi-agent/student/INSTRUCTIONS.md) و راهنمای دموی مدرس در [سناریوی مدرس](exercises/08-multi-agent/teacher/DEMO.md) است.

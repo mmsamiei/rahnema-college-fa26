@@ -1,0 +1,34 @@
+<!doctype html>
+<html lang="fa" dir="rtl">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>تمرین ۷ — Pydantic AI</title>
+<style>
+*{box-sizing:border-box}body{margin:0;background:#f5f7fb;color:#182230;font-family:system-ui,-apple-system,sans-serif}main{width:min(860px,calc(100% - 28px));margin:34px auto 60px}.eyebrow{color:#5b3db5;font-weight:750}h1{font-size:clamp(25px,4vw,35px);margin:8px 0}.sub{line-height:1.9;color:#566073}.card{background:#fff;border:1px solid #e4e7ec;border-radius:15px;padding:18px;margin-top:14px;box-shadow:0 8px 28px #3440540a}h2{font-size:17px;margin:0 0 12px}.path{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}.step{background:#f8f6ff;border:1px solid #e6e0ff;border-radius:11px;padding:11px}.step b{display:block;color:#5134a0;font-size:14px}.step span{font-size:12px;line-height:1.6;color:#566073}.form{display:grid;grid-template-columns:160px 1fr;gap:10px;align-items:center}select,textarea{font:inherit;border:1px solid #c9cdd7;border-radius:9px;padding:10px;background:white}textarea{grid-column:1/-1;min-height:74px;line-height:1.8}.button{grid-column:1/-1;justify-self:start;border:0;border-radius:9px;background:#5b3db5;color:#fff;padding:10px 16px;font:inherit;font-weight:700;cursor:pointer}.button:disabled{opacity:.55}.hint{font-size:13px;color:#667085;line-height:1.8}.answer{white-space:pre-wrap;line-height:1.9}.events{display:grid;gap:9px}.event{border-right:3px solid #6d53c4;background:#faf9ff;border-radius:8px;padding:9px 12px}.event h3{font-size:14px;margin:0 0 5px}.event pre{white-space:pre-wrap;overflow-wrap:anywhere;margin:0;font:12px/1.7 ui-monospace,monospace;color:#344054}.event.tool-call pre,.event.tool-result pre{direction:ltr;text-align:left}.event.tool-result{border-color:#12b76a;background:#f6fef9}.error{color:#b42318}.hidden{display:none}@media(max-width:600px){.path{grid-template-columns:1fr 1fr}.form{grid-template-columns:1fr}}
+</style>
+</head>
+<body><main>
+<div class="eyebrow">رهنما کالج · تمرین ۷ · دموی مدرس</div>
+<h1>Agent و Tool با Pydantic AI</h1>
+<p class="sub">همان سؤال را برای دو کاربر آزمایشی اجرا کنید. دنبال این مسیر بگردید: برنامه وابستگی‌ها را می‌سازد، Agent درخواست را به مدل می‌دهد، مدل Tool را انتخاب می‌کند، و Pydantic AI نتیجه را برای پاسخ نهایی برمی‌گرداند.</p>
+
+<section class="card"><h2>مسیر داده</h2><div class="path">
+<div class="step"><b>۱ · برنامه</b><span>انتخاب user_id و ساخت SupportDeps</span></div>
+<div class="step"><b>۲ · Agent</b><span>Agent و Tool ثبت‌شده به مدل معرفی می‌شوند</span></div>
+<div class="step"><b>۳ · Tool</b><span>ctx.deps به user_id و داده دسترسی می‌دهد</span></div>
+<div class="step"><b>۴ · پاسخ</b><span>چارچوب نتیجهٔ Tool را به مدل برمی‌گرداند</span></div>
+</div><p class="hint">حلقهٔ Tool را Pydantic AI اجرا می‌کند؛ در این تمرین قرار نیست آن را دستی بنویسید.</p></section>
+
+<section class="card"><form id="form"><h2>آزمایش دستیار</h2><div class="form">
+<label for="user">کاربر آزمایشی</label><select id="user"><option value="u-104">u-104</option><option value="u-208">u-208</option></select>
+<textarea id="question" maxlength="2000">وضعیت دسترسی من به دورهٔ مبانی یادگیری ماشین چیست؟</textarea>
+<button id="send" class="button">ارسال به Agent</button></div><p id="status" class="hint">هر دو بار همین سؤال را بفرستید و مقدار user_id را در رویداد اول ببینید.</p></form></section>
+
+<section id="answer-card" class="card hidden"><h2>پاسخ Agent</h2><div id="answer" class="answer"></div></section>
+<section id="trace-card" class="card hidden"><h2>رد اجرای Pydantic AI</h2><div id="events" class="events"></div></section>
+</main>
+<script>
+const form=document.getElementById('form'),user=document.getElementById('user'),question=document.getElementById('question'),send=document.getElementById('send'),status=document.getElementById('status'),answer=document.getElementById('answer'),events=document.getElementById('events');
+form.addEventListener('submit',async e=>{e.preventDefault();send.disabled=true;status.textContent='Agent در حال اجراست...';status.classList.remove('error');try{const response=await fetch('/api/ask',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({user_id:user.value,question:question.value.trim()})});const raw=await response.text();let data;try{data=JSON.parse(raw)}catch{throw new Error('این فقط پیش‌نمایش صفحه است؛ سرور Agent اجرا نشده است. برای پاسخ واقعی، app.py را اجرا کنید.')}if(!response.ok)throw new Error(data.error||'درخواست انجام نشد.');answer.textContent=data.answer;events.replaceChildren();data.events.forEach(item=>{const box=document.createElement('article');box.className='event '+item.kind;const title=document.createElement('h3');title.textContent=item.title;const detail=document.createElement('pre');detail.textContent=item.details;box.append(title,detail);events.append(box)});document.getElementById('answer-card').classList.remove('hidden');document.getElementById('trace-card').classList.remove('hidden');status.textContent='رد اجرا در ترمینال هم چاپ شد.'}catch(err){status.textContent=err.message;status.classList.add('error')}finally{send.disabled=false}});
+</script>
+</body></html>

@@ -1,0 +1,33 @@
+<!doctype html>
+<html lang="fa" dir="rtl">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>تمرین ۸ — چندایجنتی</title>
+<style>
+*{box-sizing:border-box}body{margin:0;background:#f4f6fa;color:#182230;font-family:system-ui,-apple-system,sans-serif}main{width:min(960px,calc(100% - 28px));margin:30px auto 56px}.eyebrow{color:#3d5596;font-weight:750}h1{font-size:clamp(25px,4vw,35px);margin:8px 0}.sub{line-height:1.9;color:#566073}.card{background:#fff;border:1px solid #e4e7ec;border-radius:15px;padding:18px;margin-top:14px;box-shadow:0 8px 28px #3440540a}h2{font-size:17px;margin:0 0 12px}.architecture{display:grid;grid-template-columns:1fr 1fr;gap:10px}.main-agent{grid-column:1/-1;text-align:center;background:#eff4ff;border:1px solid #c7d7fe;border-radius:12px;padding:13px;font-weight:750}.specialist{border:1px solid #eaecf0;border-radius:12px;padding:12px;background:#fcfcfd}.specialist b{display:block;margin-bottom:4px}.specialist span,.hint{font-size:13px;line-height:1.8;color:#667085}.form{display:grid;grid-template-columns:160px 1fr;gap:10px;align-items:center}select,textarea{font:inherit;border:1px solid #c9cdd7;border-radius:9px;padding:10px;background:white}textarea{grid-column:1/-1;min-height:92px;line-height:1.8}.button{grid-column:1/-1;justify-self:start;border:0;border-radius:9px;background:#344e91;color:#fff;padding:10px 16px;font:inherit;font-weight:700;cursor:pointer}.button:disabled{opacity:.55}.answer{white-space:pre-wrap;line-height:1.9}.events{display:grid;gap:9px}.event{border-right:3px solid #6172f3;background:#f8f9fc;border-radius:8px;padding:10px 12px}.event h3{font-size:14px;margin:0 0 5px}.event pre{white-space:pre-wrap;overflow-wrap:anywhere;margin:0;font:12px/1.7 ui-monospace,monospace;color:#344054}.event.specialist-tool pre,.event.delegation-result pre{direction:ltr;text-align:left}.event.specialist-tool{border-color:#12b76a;background:#f6fef9}.event.delegation{border-color:#f79009;background:#fffcf5}.error{color:#b42318}.hidden{display:none}@media(max-width:620px){.form{grid-template-columns:1fr}.architecture{grid-template-columns:1fr}.main-agent{grid-column:auto}}
+</style>
+</head>
+<body><main>
+<div class="eyebrow">رهنما کالج · تمرین ۸ · نسخهٔ دانشجو</div>
+<h1>دستیار اصلی و دو ایجنت متخصص</h1>
+<p class="sub">درخواست ترکیبی را به دستیار بدهید. دستیار اصلی تصمیم می‌گیرد کدام بخش را به متخصص بسپارد، گزارش‌ها را می‌گیرد و خودش پاسخ نهایی را می‌سازد.</p>
+
+<section class="card"><h2>هر ایجنت چه داده‌ای می‌بیند؟</h2><div class="architecture">
+<div class="main-agent">دستیار اصلی · هماهنگ‌کردن درخواست و نوشتن پاسخ نهایی</div>
+<div class="specialist"><b>ایجنت حساب کاربر</b><span>فقط پرداخت و ثبت‌نام کاربر انتخاب‌شده؛ ابزارهای خواندن پرداخت و دسترسی</span></div>
+<div class="specialist"><b>ایجنت کاتالوگ دوره‌ها</b><span>فقط فهرست عمومی دوره‌ها؛ ابزار جست‌وجوی دوره با موضوع و پیش‌نیاز</span></div>
+</div><p class="hint">هر دو متخصص، Agentهای جداگانه‌اند و ابزارهای خودشان را دارند. دستیار اصلی آن‌ها را مثل Tool صدا می‌زند.</p></section>
+
+<section class="card"><form id="form"><h2>آزمایش</h2><div class="form">
+<label for="user">کاربر آزمایشی</label><select id="user"><option value="u-104">u-104 · پرداخت موفق، دسترسی خاموش</option><option value="u-208">u-208 · پرداخت ناموفق</option></select>
+<textarea id="question" maxlength="2000">من دورهٔ مبانی یادگیری ماشین را خریده‌ام ولی دسترسی ندارم. برای شروع هوش مصنوعی هم چه دوره‌ای پیشنهاد می‌کنی؟</textarea>
+<button id="send" class="button">ارسال به دستیار</button></div><p id="status" class="hint">برای دیدن واگذاری به هر دو متخصص، همین سؤال ترکیبی را بفرستید. سؤال عمومی را هم امتحان کنید تا مسیر بدون واگذاری را ببینید.</p></form></section>
+
+<section id="answer-card" class="card hidden"><h2>پاسخ دستیار اصلی</h2><div id="answer" class="answer"></div></section>
+<section id="trace-card" class="card hidden"><h2>رد اجرای عامل‌ها و ابزارها</h2><div id="events" class="events"></div></section>
+</main>
+<script>
+const form=document.getElementById('form'),user=document.getElementById('user'),question=document.getElementById('question'),send=document.getElementById('send'),status=document.getElementById('status'),answer=document.getElementById('answer'),events=document.getElementById('events');
+form.addEventListener('submit',async e=>{e.preventDefault();send.disabled=true;status.textContent='عامل‌ها در حال اجرا هستند...';status.classList.remove('error');try{const response=await fetch('/api/ask',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({user_id:user.value,question:question.value.trim()})});const raw=await response.text();let data;try{data=JSON.parse(raw)}catch{throw new Error('سرور Agent پاسخ قابل‌خواندن نداد. مطمئن شوید app.py را اجرا کرده‌اید.')}if(!response.ok)throw new Error(data.error||'درخواست انجام نشد.');answer.textContent=data.answer;events.replaceChildren();data.events.forEach(item=>{const box=document.createElement('article');box.className='event '+item.kind;const title=document.createElement('h3');title.textContent=item.title;const detail=document.createElement('pre');detail.textContent=item.details;box.append(title,detail);events.append(box)});document.getElementById('answer-card').classList.remove('hidden');document.getElementById('trace-card').classList.remove('hidden');status.textContent='رد اجرا در ترمینال هم چاپ شد.'}catch(err){status.textContent=err.message;status.classList.add('error')}finally{send.disabled=false}});
+</script>
+</body></html>

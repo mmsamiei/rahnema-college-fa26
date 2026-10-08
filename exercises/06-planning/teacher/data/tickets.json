@@ -1,1 +1,10 @@
-[]
+[
+  {
+    "ticket_id": "ticket-5001",
+    "user_id": "u-104",
+    "enrollment_id": "en-1043",
+    "order_id": "or-7702",
+    "issue_summary": "پرداخت موفق ثبت شده اما دسترسی به دوره مبانی یادگیری ماشین غیرفعال است.",
+    "status": "open"
+  }
+]
