@@ -36,7 +36,7 @@ class Handler(BaseHTTPRequestHandler):
             return
         try:
             size = int(self.headers.get("Content-Length", "0"))
-            if not 0 < size <= 10000:
+            if not 0 < size <= 300000:
                 raise ValueError("درخواست نامعتبر است.")
             payload = json.loads(self.rfile.read(size))
             if not isinstance(payload, dict):
@@ -44,7 +44,18 @@ class Handler(BaseHTTPRequestHandler):
             question = payload.get("question")
             if not isinstance(question, str) or not question.strip() or len(question) > 2000:
                 raise ValueError("یک سؤال کوتاه وارد کنید.")
-            self.send_json(200, answer(question.strip()))
+            history = payload.get("history", [])
+            if not isinstance(history, list) or len(history) > 20 or any(
+                not isinstance(message, dict)
+                or message.get("role") != ("user" if index % 2 == 0 else "assistant")
+                or not isinstance(message.get("content"), str)
+                or not message["content"].strip()
+                or len(message["content"]) > (2000 if index % 2 == 0 else 10000)
+                for index, message in enumerate(history)
+            ) or len(history) % 2:
+                raise ValueError("تاریخچهٔ گفت‌وگو نامعتبر است.")
+            history = [{"role": message["role"], "content": message["content"]} for message in history]
+            self.send_json(200, answer(question.strip(), history))
         except (ValueError, json.JSONDecodeError, NotImplementedError) as exc:
             self.send_json(400, {"error": str(exc)})
         except RuntimeError as exc:

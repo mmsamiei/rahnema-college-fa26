@@ -99,10 +99,10 @@ def run_tool(tool_call: dict) -> dict:
         raise ValueError("آرگومان‌های ابزار با تعریف تابع هماهنگ نیستند.") from exc
 
 
-def answer(question: str) -> dict:
+def answer(question: str, history: Optional[list[dict]] = None) -> dict:
     events = []
-    messages = [{"role": "system", "content": PROMPT}, {"role": "user", "content": question}]
-    emit(events, "model", "۱. درخواست اول به مدل", "سؤال کاربر و تعریف دو ابزار خواندنی ارسال می‌شود.")
+    messages = [{"role": "system", "content": PROMPT}, *(history or []), {"role": "user", "content": question}]
+    emit(events, "model", "۱. درخواست اول به مدل", "تاریخچه، سؤال کاربر و تعریف دو ابزار خواندنی ارسال می‌شود.")
     first = ask_model(messages, TOOLS)
     tool_calls = first.get("tool_calls") or []
     if not tool_calls:

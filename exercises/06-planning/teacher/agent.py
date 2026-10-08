@@ -12,17 +12,13 @@ CURRENT_USER_ID = "u-104"  # trusted demo identity; never supplied by the model
 MAX_TOOL_STEPS = 7
 
 PROMPT = """شما دستیار پشتیبانی پلتفرم فرضی رهنما هستید.
-در درخواست اصلی، کاربر می‌خواهد وضعیت پرداخت و دسترسی دورهٔ مبانی یادگیری ماشین را بررسی کنید و اگر پرداخت موفق اما دسترسی غیرفعال است تیکت بسازید؛ سپس وضعیت پرداخت و دسترسی دورهٔ مبانی هوش مصنوعی را هم گزارش کنید.
-دامنهٔ درخواست‌های دیگر را از متن کاربر تشخیص دهید؛ هیچ وضعیت پرداخت یا دسترسی را بدون نتیجهٔ ابزار گزارش نکنید.
-در ابتدای هر دور برنامهٔ کوتاه و عملیاتیِ کارهای باقی‌مانده را با record_plan ثبت می‌کنید. این متن خلاصهٔ قابل‌نمایش برنامه است، نه زنجیرهٔ فکر خصوصی.
-پس از هر مشاهده، برنامه را بر اساس شواهد تازه به‌روز کنید. قدم اول برنامه باید گام بعدی را مشخص کند؛ اگر کار تمام است، بنویسید آمادهٔ پاسخ هستید.
-در مرحلهٔ اقدام، هر بار فقط یک ابزار فراخوانی کنید. ابزار بعدی را پس از دیدن نتیجه، در دور بعد انتخاب کنید.
-از ابزارهای ثبت‌نام، پرداخت و دسترسی برای پیدا کردن شناسه‌ها و بررسی هر دو دوره استفاده کنید.
-فقط اگر کاربر تیکت خواسته، پرداخت موفق و دسترسی غیرفعال است تیکت بسازید. ابزار ساخت تیکت خودش وجود تیکت تکراری را بررسی می‌کند؛ ابزار جداگانه‌ای برای فهرست تیکت‌ها ندارید.
-اگر دسترسی فعال است، پرداخت ناموفق است، یا تیکت باز از قبل وجود دارد، تیکت تازه نسازید.
-تیکت فقط برای ثبت‌نام متعلق به کاربر u-104 ساخته می‌شود؛ نتیجهٔ ابزار Python مرجع نهایی است.
-اگر نام دوره یا ثبت‌نام مبهم است، سؤال روشن‌کننده بپرسید. چیزی را که ابزار تأیید نکرده ادعا نکنید.
-حداکثر ۷ اجرای ابزار عملیاتی دارید. پس از آن بدون ابزار جمع‌بندی کنید و بخش‌های ناتمام را بگویید."""
+در تصمیم اول فقط یکی را انتخاب کنید: final_answer برای پاسخ مستقیم، یا record_plan برای کاری که به بررسی و ابزار نیاز دارد.
+برای سلام یا گفت‌وگوی عمومی، final_answer مناسب است. اگر record_plan را انتخاب کردید، برنامهٔ کوتاه و مرتبِ کارهای باقی‌مانده را ثبت کنید؛ این متن خلاصهٔ قابل‌نمایش برنامه است، نه زنجیرهٔ فکر خصوصی.
+پس از ثبت برنامه، نتیجهٔ آن را در تاریخچه می‌بینید و در هر دور فقط یک ابزار عملیاتی انتخاب می‌کنید یا پاسخ نهایی می‌دهید. ابزار بعدی را پس از دیدن نتیجهٔ ابزار قبلی انتخاب کنید.
+فقط دوره‌ها و اقدام‌های خواسته‌شده در پیام کاربر را بررسی کنید. از ابزارهای ثبت‌نام، پرداخت و دسترسی برای پیدا کردن شناسه‌ها و بررسی وضعیت استفاده کنید. هیچ وضعیت پرداخت یا دسترسی را بدون نتیجهٔ ابزار گزارش نکنید.
+حساب آزمایشی فعلی u-104 است و Python آن را به ابزارها می‌دهد؛ برای بررسی از کاربر شماره موبایل یا شناسهٔ حساب نخواهید. در evidence فقط متن درخواست کاربر و نتیجهٔ ابزارهای واقعاً اجراشده را بیاورید.
+فقط اگر کاربر تیکت خواسته و پرداخت موفق و دسترسی غیرفعال است تیکت بسازید. ابزار ساخت تیکت مالکیت، وضعیت داده و تکراری‌نبودن تیکت را دوباره بررسی می‌کند.
+اگر درخواست مبهم است، سؤال روشن‌کننده بپرسید. نتیجهٔ ابزار Python مرجع نهایی است. حداکثر ۷ اجرای ابزار عملیاتی دارید؛ پس از آن بدون ابزار جمع‌بندی کنید و بخش‌های ناتمام را بگویید."""
 
 LIST_ENROLLMENTS = {"type": "function", "function": {"name": "list_my_enrollments",
     "description": "ثبت‌نام‌های کاربر فعلی را همراه شناسهٔ ثبت‌نام، سفارش و نام دوره فهرست می‌کند.",
@@ -47,6 +43,10 @@ PLAN_TOOL = {"type": "function", "function": {"name": "record_plan",
         "steps": {"type": "array", "items": {"type": "string"}},
         "evidence": {"type": "string"}},
         "required": ["steps", "evidence"], "additionalProperties": False}}}
+FINAL_TOOL = {"type": "function", "function": {"name": "final_answer",
+    "description": "وقتی برای پیام فعلی نیازی به بررسی با ابزار نیست، پاسخ نهایی را ثبت می‌کند.",
+    "parameters": {"type": "object", "properties": {"answer": {"type": "string"}},
+                    "required": ["answer"], "additionalProperties": False}}}
 
 
 def emit(events: list[dict], kind: str, title: str, details: str) -> None:
@@ -171,7 +171,7 @@ def save_plan(tool_call: dict, plans: list[dict]) -> dict:
     try:
         function = tool_call["function"]
         if function["name"] != "record_plan":
-            raise ValueError("در ابتدای هر دور فقط record_plan مجاز است.")
+            raise ValueError("برای ثبت برنامه فقط record_plan مجاز است.")
         arguments = json.loads(function["arguments"])
         steps, evidence = arguments["steps"], arguments["evidence"]
     except (KeyError, TypeError, json.JSONDecodeError) as exc:
@@ -185,132 +185,16 @@ def save_plan(tool_call: dict, plans: list[dict]) -> dict:
     return {"saved": True, "version": plan["version"]}
 
 
-def tool_answer(result: Optional[dict]) -> str:
-    if not result:
-        return "بررسی تمام شد؛ نتیجه‌ای برای نمایش از ابزار دریافت نشد."
-    if "ticket_id" in result and result.get("ok"):
-        return f"تیکت {result['ticket_id']} ثبت شد."
-    if result.get("ok") is False:
-        return "تیکت ساخته نشد: " + result.get("message", "شرایط ساخت تیکت برقرار نبود.")
-    return "نتیجهٔ آخرین ابزار: " + json.dumps(result, ensure_ascii=False)
-
-
-def requested_scope(question: str) -> tuple[list[str], bool, bool, bool]:
-    text = question.lower()
-    courses = []
-    if "یادگیری ماشین" in text:
-        courses.append("مبانی یادگیری ماشین")
-    if "هوش مصنوعی" in text:
-        courses.append("مبانی هوش مصنوعی")
-    if "python" in text or "پایتون" in text:
-        courses.append("Python برای تحلیل داده")
-    if not courses:
-        courses = ["مبانی یادگیری ماشین", "مبانی هوش مصنوعی"]
-    wants_ticket = "تیکت" in text and not any(phrase in text for phrase in ("تیکت نساز", "تیکت نمی‌خوام", "بدون تیکت"))
-    wants_payment = any(word in text for word in ("پرداخت", "پول", "حسابم", "برداشت")) or wants_ticket
-    wants_access = any(word in text for word in ("دسترسی", "ورود", "باز نمی")) or wants_ticket
-    if not wants_payment and not wants_access:
-        wants_payment = wants_access = True
-    return courses, wants_payment, wants_access, wants_ticket
-
-
-def missing_evidence(question: str, observations: dict) -> list[str]:
-    courses, wants_payment, wants_access, wants_ticket = requested_scope(question)
-    if observations["enrollments"] is None:
-        return ["خواندن فهرست ثبت‌نام‌های کاربر"]
-    missing = []
-    rows = observations["enrollments"]
-    for course in courses:
-        enrollment = next((row for row in rows if row["course"] == course), None)
-        if enrollment is None:
-            continue  # The list result is evidence that this course is not enrolled.
-        if wants_payment and enrollment["order_id"] not in observations["payments"]:
-            missing.append(f"وضعیت پرداخت {course}")
-        if wants_access and enrollment["enrollment_id"] not in observations["access"]:
-            missing.append(f"وضعیت دسترسی {course}")
-        if (wants_ticket and wants_payment and wants_access
-                and observations["payments"].get(enrollment["order_id"], {}).get("payment", {}).get("status") == "paid"
-                and observations["access"].get(enrollment["enrollment_id"], {}).get("access", {}).get("status") == "inactive"
-                and enrollment["enrollment_id"] not in observations["tickets"]):
-            missing.append(f"اقدام تیکت برای {course}")
-    return missing
-
-
-def capture_observation(tool_call: dict, result: dict, observations: dict) -> None:
-    name = tool_call["function"]["name"]
-    arguments = json.loads(tool_call["function"]["arguments"])
-    if name == "list_my_enrollments":
-        observations["enrollments"] = result.get("enrollments", [])
-    elif name == "get_payment_status":
-        observations["payments"][arguments["order_id"]] = result
-    elif name == "get_course_access":
-        observations["access"][arguments["enrollment_id"]] = result
-    elif name == "create_access_ticket":
-        observations["tickets"][arguments["enrollment_id"]] = result
-
-
-def evidence_summary(question: str, observations: dict) -> str:
-    courses, wants_payment, wants_access, wants_ticket = requested_scope(question)
-    lines = []
-    rows = observations["enrollments"] or []
-    for course in courses:
-        enrollment = next((row for row in rows if row["course"] == course), None)
-        if enrollment is None:
-            lines.append(f"{course}: ثبت‌نامی در دادهٔ کاربر پیدا نشد.")
-            continue
-        details = [course]
-        payment = observations["payments"].get(enrollment["order_id"])
-        access = observations["access"].get(enrollment["enrollment_id"])
-        if wants_payment:
-            details.append("پرداخت=" + (payment.get("payment", {}).get("status", "یافت نشد") if payment else "بررسی نشد"))
-        if wants_access:
-            details.append("دسترسی=" + (access.get("access", {}).get("status", "یافت نشد") if access else "بررسی نشد"))
-        ticket = observations["tickets"].get(enrollment["enrollment_id"])
-        if ticket:
-            details.append("تیکت=" + ticket.get("ticket_id", ticket.get("message", "ثبت شد")))
-        elif wants_ticket:
-            details.append("تیکت بررسی/ثبت نشد")
-        lines.append("، ".join(details))
-    return "نتیجهٔ تأییدشده تا اینجا:\n" + "\n".join(lines)
-
-
-def contradicts_evidence(question: str, answer_text: str, observations: dict) -> bool:
-    """Catch explicit status claims that conflict with tool results."""
-    courses, wants_payment, wants_access, _ = requested_scope(question)
-    text = " " + answer_text.lower() + " "
-    aliases = {
-        "مبانی یادگیری ماشین": ("مبانی یادگیری ماشین", "یادگیری ماشین", "machine learning"),
-        "مبانی هوش مصنوعی": ("مبانی هوش مصنوعی", "هوش مصنوعی", "artificial intelligence", " ai "),
-        "Python برای تحلیل داده": ("python برای تحلیل داده", "پایتون برای تحلیل داده", "python"),
-    }
-    active_claims = ("دسترسی فعال", "دسترسی‌ام فعاله", "دسترسی‌ات فعاله", "access is active", "access: active", "دسترسی: active")
-    inactive_claims = ("دسترسی غیرفعال", "دسترسی غیرفعاله", "access is inactive", "access: inactive", "دسترسی: inactive")
-    paid_claims = ("پرداخت موفق", "پرداخت شده", "پرداخت انجام شده", "payment is paid", "payment: paid", "paid")
-    failed_claims = ("پرداخت ناموفق", "پرداخت نشده", "پرداخت انجام نشده", "payment failed", "payment: failed", "failed")
-
-    for course in courses:
-        if not any(alias in text for alias in aliases.get(course, (course.lower(),))):
-            continue
-        enrollment = next((row for row in observations["enrollments"] or [] if row["course"] == course), None)
-        if enrollment is None:
-            continue
-        if wants_access:
-            access = observations["access"].get(enrollment["enrollment_id"], {}).get("access")
-            if access:
-                status = access.get("status")
-                if status == "inactive" and any(claim in text for claim in active_claims):
-                    return True
-                if status == "active" and any(claim in text for claim in inactive_claims):
-                    return True
-        if wants_payment:
-            payment = observations["payments"].get(enrollment["order_id"], {}).get("payment")
-            if payment:
-                status = payment.get("status")
-                if status == "paid" and any(claim in text for claim in failed_claims):
-                    return True
-                if status in {"failed", "declined", "unpaid"} and any(claim in text for claim in paid_claims):
-                    return True
-    return False
+def final_answer_from_call(tool_call: dict) -> str:
+    try:
+        if tool_call["function"]["name"] != "final_answer":
+            raise ValueError("تصمیم اول باید record_plan یا final_answer باشد.")
+        answer = json.loads(tool_call["function"]["arguments"])["answer"]
+    except (KeyError, TypeError, json.JSONDecodeError) as exc:
+        raise ValueError("پاسخ نهایی قالب درستی ندارد.") from exc
+    if not isinstance(answer, str) or not answer.strip() or len(answer) > 8000:
+        raise ValueError("متن پاسخ نهایی معتبر نیست.")
+    return answer.strip()
 
 
 def answer(question: str, history: object) -> dict:
@@ -328,74 +212,60 @@ def answer(question: str, history: object) -> dict:
     events = []
     plans = []
     tool_steps = 0
-    incomplete_finals = 0
-    observations = {"enrollments": None, "payments": {}, "access": {}, "tickets": {}}
+
+    emit(events, "model", "تصمیم اول", "مدل باید یکی از دو ابزار record_plan یا final_answer را انتخاب کند.")
+    first = ask_model(messages, [PLAN_TOOL, FINAL_TOOL], "required")
+    first_calls = first.get("tool_calls") or []
+    if len(first_calls) != 1:
+        raise ValueError("مدل باید در تصمیم اول دقیقاً یک ابزار انتخاب کند: record_plan یا final_answer.")
+    first_call = first_calls[0]
+    name = first_call.get("function", {}).get("name")
+    if name == "final_answer":
+        text = final_answer_from_call(first_call)
+        emit(events, "answer", "پاسخ نهایی", text)
+        return {"answer": text, "events": events, "plans": plans}
+    if name != "record_plan":
+        raise ValueError("تصمیم اول باید record_plan یا final_answer باشد.")
+    plan_result = save_plan(first_call, plans)
+    plan = plans[-1]
+    details = "شواهد: " + (plan["evidence"] or "درخواست کاربر") + "\nگام‌های باقی‌مانده:\n"
+    details += "\n".join(f"{index}. {step}" for index, step in enumerate(plan["steps"], 1))
+    emit(events, "plan", "برنامهٔ اولیه", details)
+    messages.append({"role": "assistant", "content": first.get("content"), "tool_calls": [first_call]})
+    messages.append({"role": "tool", "tool_call_id": first_call["id"],
+                     "content": json.dumps(plan_result, ensure_ascii=False)})
 
     while tool_steps < MAX_TOOL_STEPS:
-        emit(events, "model", f"Planning · دور {tool_steps + 1}",
-             "این دور با فراخوانی اجباری record_plan شروع می‌شود.")
-        plan_response = ask_model(messages, [PLAN_TOOL],
-                                  {"type": "function", "function": {"name": "record_plan"}})
-        plan_calls = plan_response.get("tool_calls") or []
-        if len(plan_calls) != 1:
-            raise ValueError("مدل باید در ابتدای هر دور دقیقاً یک بار record_plan را فراخوانی کند.")
-        plan_call = plan_calls[0]
-        plan_result = save_plan(plan_call, plans)
-        plan = plans[-1]
-        plan_details = "شواهد: " + (plan["evidence"] or "درخواست اولیه") + "\nگام‌های باقی‌مانده:\n"
-        plan_details += "\n".join(f"{index}. {step}" for index, step in enumerate(plan["steps"], 1))
-        emit(events, "plan", f"برنامهٔ نسخهٔ {plan['version']}", plan_details)
-        messages.append({"role": "assistant", "content": plan_response.get("content"), "tool_calls": plan_calls})
-        messages.append({"role": "tool", "tool_call_id": plan_call["id"],
-                         "content": json.dumps(plan_result, ensure_ascii=False)})
-
-        emit(events, "model", f"انتخاب اقدام · دور {tool_steps + 1}",
-             "مدل برنامه و نتیجهٔ ثبت آن را می‌بیند و سپس ابزار عملیاتی یا پاسخ نهایی را انتخاب می‌کند.")
+        emit(events, "model", f"انتخاب اقدام · گام {tool_steps + 1}",
+             "مدل با دیدن تاریخچه و نتیجهٔ ابزارهای قبلی، یک ابزار یا پاسخ نهایی انتخاب می‌کند.")
         response = ask_model(messages, TOOLS)
         tool_calls = response.get("tool_calls") or []
         if not tool_calls:
-            missing = missing_evidence(question, observations)
-            if missing:
-                incomplete_finals += 1
-                emit(events, "warning", "شواهد برای پاسخ کافی نیست", "هنوز باید بررسی شود: " + "؛ ".join(missing))
-                if incomplete_finals >= 2:
-                    text = evidence_summary(question, observations)
-                    emit(events, "answer", "جمع‌بندی داده‌های تأییدشده", text)
-                    return {"answer": text, "events": events, "plans": plans}
-                messages.append({"role": "system", "content": "پاسخ نهایی را هنوز ندهید. نتیجهٔ Python نشان می‌دهد این موارد هنوز با ابزار بررسی نشده‌اند: " + "؛ ".join(missing) + ". در دور بعد برنامه را به‌روز کنید و ابزار لازم را اجرا کنید."})
-                continue
-            text = response.get("content") or evidence_summary(question, observations)
-            if contradicts_evidence(question, text, observations):
-                emit(events, "warning", "پاسخ با مشاهده‌ها سازگار نیست", "وضعیت اعلام‌شده با نتیجهٔ ابزارها تعارض دارد؛ جمع‌بندی از دادهٔ تأییدشده ساخته می‌شود.")
-                text = evidence_summary(question, observations)
+            text = response.get("content")
+            if not isinstance(text, str) or not text.strip():
+                raise RuntimeError("مدل پاسخ نهایی متنی برنگرداند.")
             emit(events, "answer", "پاسخ نهایی", text)
             return {"answer": text, "events": events, "plans": plans}
         tool_call = tool_calls[0]
         if len(tool_calls) > 1:
-            emit(events, "warning", "درخواست چند ابزار", "مدل چند ابزار پیشنهاد داد؛ فقط اولین ابزار اجرا می‌شود و پس از مشاهدهٔ نتیجه، plan و تصمیم بعدی از نو ساخته می‌شوند.")
-        selected_calls = [tool_call]
+            emit(events, "warning", "درخواست چند ابزار",
+                 "در هر گام فقط ابزار اول اجرا می‌شود؛ مدل بعد از دیدن نتیجه دوباره تصمیم می‌گیرد.")
         emit(events, "tool-call", f"درخواست ابزار · گام {tool_steps + 1}",
              json.dumps(tool_call["function"], ensure_ascii=False, indent=2))
         result = run_tool(tool_call)
-        capture_observation(tool_call, result, observations)
         emit(events, "tool-result", f"مشاهدهٔ Python · گام {tool_steps + 1}",
              json.dumps(result, ensure_ascii=False, indent=2))
-        messages.append({"role": "assistant", "content": response.get("content"), "tool_calls": selected_calls})
+        messages.append({"role": "assistant", "content": response.get("content"), "tool_calls": [tool_call]})
         messages.append({"role": "tool", "tool_call_id": tool_call["id"],
                          "content": json.dumps(result, ensure_ascii=False)})
         tool_steps += 1
 
-    emit(events, "limit", "رسیدن به سقف گام‌ها", f"پس از {MAX_TOOL_STEPS} اجرای عملیاتی، دیگر برنامه یا ابزار تازه‌ای اجرا نمی‌شود.")
+    emit(events, "limit", "رسیدن به سقف گام‌ها",
+         f"پس از {MAX_TOOL_STEPS} اجرای ابزار عملیاتی، مدل بدون ابزار جمع‌بندی می‌کند.")
     final = ask_model(messages)
-    missing = missing_evidence(question, observations)
-    if missing:
-        text = f"پس از {MAX_TOOL_STEPS} اجرای ابزار، حلقه متوقف شد. " + evidence_summary(question, observations)
-        text += "\nموارد بررسی‌نشده: " + "؛ ".join(missing)
-    else:
-        text = final.get("content") or f"بررسی پس از {MAX_TOOL_STEPS} اجرای ابزار متوقف شد. {tool_answer(result)}"
-        if contradicts_evidence(question, text, observations):
-            emit(events, "warning", "پاسخ با مشاهده‌ها سازگار نیست", "وضعیت اعلام‌شده با نتیجهٔ ابزارها تعارض دارد؛ جمع‌بندی از دادهٔ تأییدشده ساخته می‌شود.")
-            text = evidence_summary(question, observations)
+    text = final.get("content")
+    if not isinstance(text, str) or not text.strip():
+        raise RuntimeError("مدل پس از سقف ابزارها پاسخ نهایی متنی برنگرداند.")
     emit(events, "answer", "پاسخ نهایی", text)
     return {"answer": text, "events": events, "plans": plans}
 

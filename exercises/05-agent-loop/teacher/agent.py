@@ -12,7 +12,8 @@ CURRENT_USER_ID = "u-104"  # trusted demo identity; never supplied by the model
 MAX_TOOL_STEPS = 5
 
 PROMPT = """شما دستیار پشتیبانی پلتفرم فرضی رهنما هستید.
-کاربر می‌گوید پول دوره از حسابش کم شده اما دسترسی ندارد. با ابزارها شواهد را مرحله‌به‌مرحله بررسی کنید.
+اگر کاربر فقط سلام کرد یا سؤال عمومی پرسید، کوتاه و بدون ابزار پاسخ دهید.
+اگر کاربر گفت پول دوره از حسابش کم شده اما دسترسی ندارد، با ابزارها شواهد را مرحله‌به‌مرحله بررسی کنید.
 برای فهمیدن دوره و شناسه‌ها از list_my_enrollments استفاده کنید؛ بعد وضعیت پرداخت و دسترسی همان ثبت‌نام را جداگانه بخوانید.
 فقط اگر پرداخت paid و دسترسی inactive است، یک تیکت برای همان ثبت‌نام بسازید.
 اگر پرداخت ناموفق است یا دسترسی فعال است، تیکت نسازید و نتیجه را توضیح دهید.
@@ -171,6 +172,10 @@ def answer(question: str, history: object) -> dict:
         messages.append({"role": item["role"], "content": content})
     messages.append({"role": "user", "content": question})
     events = []
+    if question.strip().strip("!؟?،. ").lower() in {"سلام", "درود", "سلام و درود"}:
+        text = "سلام! برای بررسی پرداخت و دسترسی دوره‌تان چه کمکی می‌توانم بکنم؟"
+        emit(events, "answer", "پاسخ نهایی", text)
+        return {"answer": text, "events": events}
     tool_steps = 0
 
     while tool_steps < MAX_TOOL_STEPS:
@@ -182,16 +187,15 @@ def answer(question: str, history: object) -> dict:
             text = response.get("content") or "پاسخ متنی دریافت نشد."
             emit(events, "answer", "پاسخ نهایی", text)
             return {"answer": text, "events": events}
-        if len(tool_calls) != 1:
-            raise ValueError("در هر گام فقط یک ابزار اجرا می‌شود.")
-
         tool_call = tool_calls[0]
+        if len(tool_calls) > 1:
+            emit(events, "warning", "چند درخواست ابزار", "مدل چند ابزار پیشنهاد کرد؛ در این گام فقط ابزار اول اجرا می‌شود و مدل پس از دیدن نتیجه دوباره تصمیم می‌گیرد.")
         emit(events, "tool-call", f"درخواست ابزار · گام {tool_steps + 1}",
              json.dumps(tool_call["function"], ensure_ascii=False, indent=2))
         result = run_tool(tool_call)
         emit(events, "tool-result", f"مشاهدهٔ Python · گام {tool_steps + 1}",
              json.dumps(result, ensure_ascii=False, indent=2))
-        messages.append({"role": "assistant", "content": response.get("content"), "tool_calls": tool_calls})
+        messages.append({"role": "assistant", "content": response.get("content"), "tool_calls": [tool_call]})
         messages.append({"role": "tool", "tool_call_id": tool_call["id"],
                          "content": json.dumps(result, ensure_ascii=False)})
         tool_steps += 1
