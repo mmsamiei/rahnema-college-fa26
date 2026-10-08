@@ -9,7 +9,7 @@ source .venv/bin/activate
 python exercises/08-multi-agent/teacher/app.py
 ```
 
-صفحه در `http://127.0.0.1:8788` باز می‌شود. تمرین از همان وابستگی ثبت‌شده در `exercises/07-pydantic-ai/requirements.txt` استفاده می‌کند.
+صفحه در `http://127.0.0.1:8788` باز می‌شود. تمرین از وابستگی‌های ثبت‌شده در `requirements.txt` ریشهٔ پروژه استفاده می‌کند.
 
 ## مسیر دموی اصلی
 

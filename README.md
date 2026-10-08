@@ -95,7 +95,7 @@ python3 exercises/06-planning/student/app.py
 ```bash
 python3.12 -m venv .venv
 source .venv/bin/activate
-python -m pip install -r exercises/07-pydantic-ai/requirements.txt
+python -m pip install -r requirements.txt
 ```
 
 نسخهٔ دانشجو در `http://127.0.0.1:8785` و دموی مدرس در `http://127.0.0.1:8786` اجرا می‌شوند. هر نسخه را در ترمینال جدا اجرا کنید:

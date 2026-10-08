@@ -7,7 +7,7 @@
 ```bash
 python3.12 -m venv .venv
 source .venv/bin/activate
-python -m pip install -r exercises/07-pydantic-ai/requirements.txt
+python -m pip install -r requirements.txt
 ```
 
 تنظیمات LLM را در `.env` ریشه کامل کنید. برای اجرای نسخهٔ مدرس:
